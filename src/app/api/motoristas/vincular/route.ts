@@ -63,8 +63,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Preencha todos os campos obrigatórios (Nome, Telefone e E-mail)' }, { status: 400 });
     }
 
-    const generatedEmail = email;
-    const generatedPassword = `Tamboo@${email}`;
+    const generatedEmail = email.toLowerCase().trim();
+    const generatedPassword = `Tamboo@${generatedEmail}`;
 
     // 5. Verificar se o motorista já existe no sistema global (por email ou telefone)
     let driverUserId = null;

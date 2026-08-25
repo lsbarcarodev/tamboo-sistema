@@ -24,9 +24,10 @@ export default function MotoristaLoginPage() {
     setError(null);
 
     try {
+      const emailNormalized = motoristaEmail.toLowerCase().trim();
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: motoristaEmail,
-        password: `Tamboo@${motoristaEmail}`,
+        email: emailNormalized,
+        password: `Tamboo@${emailNormalized}`,
       });
 
       if (error) {

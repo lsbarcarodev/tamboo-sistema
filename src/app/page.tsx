@@ -96,7 +96,6 @@ export default function LocacoesPage() {
   const [motoristas, setMotoristas] = useState<any[]>([]);
   const [orderToDispatch, setOrderToDispatch] = useState<any>(null);
   const [selectedDriverId, setSelectedDriverId] = useState<string>("");
-  const [selectedHorario, setSelectedHorario] = useState<string>("");
 
   useEffect(() => {
     if (orderToDispatch && selectedDriverId) {
@@ -105,8 +104,6 @@ export default function LocacoesPage() {
       if (!dataBaseStr && orderToDispatch.created_at) dataBaseStr = orderToDispatch.created_at;
       
       const dataFormatada = dataBaseStr ? dataBaseStr.split('T')[0] : new Date().toISOString().split('T')[0];
-
-      setSelectedHorario("");
     }
   }, [orderToDispatch, selectedDriverId, pedidos]);
 
@@ -278,10 +275,9 @@ export default function LocacoesPage() {
     }
   };
 
-  const vincularMotorista = async (id: string, driverId: string, horario?: string) => {
+  const vincularMotorista = async (id: string, driverId: string) => {
     try {
       const payload: any = { motorista_id: driverId };
-      if (horario) payload.horario = horario;
 
       const { error } = await supabase
         .from('st_locacoes')
@@ -927,27 +923,6 @@ export default function LocacoesPage() {
                 ))}
               </select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="horarioSelect">Horário da Entrega/Retirada</Label>
-              <select
-                id="horarioSelect"
-                value={selectedHorario}
-                onChange={(e) => setSelectedHorario(e.target.value)}
-                className="w-full border-slate-200 border rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#19302a]"
-              >
-                <option value="">Selecione um horário (Opcional)</option>
-                {Array.from({ length: 48 }).map((_, i) => {
-                  const h = Math.floor(i / 2).toString().padStart(2, '0');
-                  const m = (i % 2 === 0 ? '00' : '30');
-                  const time = `${h}:${m}`;
-                  return (
-                    <option key={time} value={time}>
-                      {time}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
           </div>
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setOrderToDispatch(null)}>
@@ -959,7 +934,7 @@ export default function LocacoesPage() {
                 if (orderToDispatch && selectedDriverId) {
                   // Apenas vincula o motorista, não muda o status para Alocado imediatamente
                   // O próprio motorista mudará o status para Alocado quando concluir a entrega no app
-                  vincularMotorista(orderToDispatch.id, selectedDriverId, selectedHorario);
+                  vincularMotorista(orderToDispatch.id, selectedDriverId);
                   setOrderToDispatch(null);
                 }
               }}
