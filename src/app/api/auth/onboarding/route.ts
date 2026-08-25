@@ -2,10 +2,30 @@ import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 
+// Função auxiliar para garantir que a chave seja extraída corretamente
+// caso o usuário tenha colado todo o conteúdo do .env na variável por engano
+function getServiceRoleKey() {
+  let key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  if (key.includes('SUPABASE_SERVICE_ROLE_KEY=')) {
+    const match = key.match(/SUPABASE_SERVICE_ROLE_KEY=(eyJ[^\n\r]+)/);
+    if (match) return match[1].trim();
+  }
+  return key.trim();
+}
+
+function getSupabaseUrl() {
+  let url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  if (url.includes('NEXT_PUBLIC_SUPABASE_URL=')) {
+    const match = url.match(/NEXT_PUBLIC_SUPABASE_URL=(https:\/\/[^\n\r]+)/);
+    if (match) return match[1].trim();
+  }
+  return url.trim();
+}
+
 // Precisamos do Service Role para criar usuário ignorando bloqueios normais do front-end
 const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  getSupabaseUrl(),
+  getServiceRoleKey()
 );
 
 export async function POST(request: Request) {
