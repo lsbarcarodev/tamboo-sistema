@@ -1,0 +1,568 @@
+version: "3.7"
+services:
+
+## --------------------------- ORION --------------------------- ##
+
+  supabase_studio:
+    image: supabase/studio:2025.11.10-sha-5291fe3
+
+    networks:
+      - genezenet ## Nome da rede interna
+
+    environment:     
+    ## 🔗 Configuração do Supabase
+      - HOSTNAME=0.0.0.0
+      - SUPABASE_URL=http://supabase_kong:8000
+      - SUPABASE_PUBLIC_URL=https://supabase.geneze.online
+      - SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.dm-dvIwTl60Y-OZ-5CjpRtDHQWBnqMs76bT6HSEtLEw
+      - SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogInNlcnZpY2Vfcm9sZSIsCiAgImlzcyI6ICJzdXBhYmFzZSIsCiAgImlhdCI6IDE3MTUwNTA4MDAsCiAgImV4cCI6IDE4NzI4MTcyMDAKfQ.rMxky610PthtUrp4Z6FoL9NhaufLv3EdwpIxISRPNn4
+      - AUTH_JWT_SECRET=f4c03e3b2bcd525701e4a78e1795c34cc054dc60
+
+    ## 🎨 Configuração de Branding
+      - DEFAULT_ORGANIZATION_NAME=OrionAcademy
+      - DEFAULT_PROJECT_NAME=SetupOrion
+
+    ## 🐘 Configuração do Postgres (interno)
+      - POSTGRES_DB=postgres
+      - POSTGRES_HOST=supabase_db
+      - POSTGRES_PORT=5432
+      - POSTGRES_PASSWORD=5071b0ab0ce3ca742f3ee928d44e497a
+      - PG_META_CRYPTO_KEY=f5a0b90c93abbfc4d97ce4803e8f8287ad49655d1d43fccf4e17b33308cb0cd9
+
+    ## 📊 Integração com Logflare
+      - LOGFLARE_URL=http://supabase_analytics:4000
+      - LOGFLARE_API_KEY=903e36d50ed22f16838269010908b048
+      - LOGFLARE_PUBLIC_ACCESS_TOKEN=165a36a6ba14eaf81108935cd1be3eee
+      - LOGFLARE_PRIVATE_ACCESS_TOKEN=903e36d50ed22f16838269010908b048
+      - NEXT_PUBLIC_ENABLE_LOGS=true
+      - NEXT_ANALYTICS_BACKEND_PROVIDER=postgres
+      - DEBUG=next:*
+
+    ## 🔍 Configuração do Meta
+      - STUDIO_PG_META_URL=http://supabase_meta:8080
+
+    ## 🤖 Configuração do OpenAI (opcional)
+      # - OPENAI_API_KEY=
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+## --------------------------- ORION --------------------------- ##
+
+  supabase_kong:
+    image: kong:2.8.1
+    entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+
+    volumes:
+      - /root/supabase/docker/volumes/api/kong.yml:/home/kong/temp.yml:ro,z
+
+    networks:
+      - genezenet ## Nome da rede interna
+
+    environment:
+    ## 🧑‍💻 Configuração de usuário e senha do Dashboard
+      - DASHBOARD_USERNAME=lsbarcaro
+      - DASHBOARD_PASSWORD=@Panaleo0
+
+    ## 🔐 Configurações de Autenticação
+      - JWT_SECRET=f4c03e3b2bcd525701e4a78e1795c34cc054dc60
+      - SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.dm-dvIwTl60Y-OZ-5CjpRtDHQWBnqMs76bT6HSEtLEw
+      - SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogInNlcnZpY2Vfcm9sZSIsCiAgImlzcyI6ICJzdXBhYmFzZSIsCiAgImlhdCI6IDE3MTUwNTA4MDAsCiAgImV4cCI6IDE4NzI4MTcyMDAKfQ.rMxky610PthtUrp4Z6FoL9NhaufLv3EdwpIxISRPNn4
+
+    ## 🗄️ Configuração do Banco de Dados
+      - KONG_DATABASE=off
+      - KONG_DECLARATIVE_CONFIG=/home/kong/kong.yml
+
+    ## 🌐 Configuração de DNS
+      - KONG_DNS_ORDER=LAST,A,CNAME
+
+    ## 🧩 Configuração de Plugins
+      - KONG_PLUGINS=request-transformer,cors,key-auth,acl,basic-auth,request-termination,ip-restriction
+
+    ## 📦 Configurações de Buffers do NGINX
+      - KONG_NGINX_PROXY_PROXY_BUFFER_SIZE=160k
+      - KONG_NGINX_PROXY_PROXY_BUFFERS=64 160k
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager  
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.supabase_kong.rule=Host(`supabase.geneze.online`) && PathPrefix(`/`) ## Url do Supabase
+        - traefik.http.services.supabase_kong.loadbalancer.server.port=8000
+        - traefik.http.routers.supabase_kong.service=supabase_kong
+        - traefik.http.routers.supabase_kong.entrypoints=websecure
+        - traefik.http.routers.supabase_kong.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.supabase_kong.tls=true
+
+## --------------------------- ORION --------------------------- ##
+
+  supabase_auth:
+    image: supabase/gotrue:v2.182.1
+
+    networks:
+      - genezenet ## Nome da rede interna
+
+    environment:
+    ## ⚙️ Configuração Geral da API Auth
+      - GOTRUE_API_HOST=0.0.0.0
+      - GOTRUE_API_PORT=9999
+      - API_EXTERNAL_URL=https://supabase.geneze.online
+
+    ## 🗄️ Configuração do Banco de Dados
+      - GOTRUE_DB_DRIVER=postgres
+      - GOTRUE_DB_DATABASE_URL=postgres://supabase_auth_admin:5071b0ab0ce3ca742f3ee928d44e497a@supabase_db:5432/postgres ## Troque a senha do postgres
+
+    ## 🔗 Configurações de URL e Permissões
+      - GOTRUE_SITE_URL=https://supabase.geneze.online
+      - GOTRUE_URI_ALLOW_LIST=
+      - GOTRUE_DISABLE_SIGNUP=false
+
+    ## 🔐 Configurações de JWT
+      - GOTRUE_JWT_ADMIN_ROLES=service_role
+      - GOTRUE_JWT_AUD=authenticated
+      - GOTRUE_JWT_DEFAULT_GROUP_NAME=authenticated
+      - GOTRUE_JWT_EXP=31536000
+      - GOTRUE_JWT_SECRET=f4c03e3b2bcd525701e4a78e1795c34cc054dc60
+
+    ## 📧 Configuração de email
+      - GOTRUE_EXTERNAL_EMAIL_ENABLED=false
+      - GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED=false
+      - GOTRUE_MAILER_AUTOCONFIRM=true
+      - GOTRUE_EXTERNAL_SKIP_NONCE_CHECK=true
+      - GOTRUE_MAILER_SECURE_EMAIL_CHANGE_ENABLED=true
+      - GOTRUE_SMTP_MAX_FREQUENCY=1s
+
+    ## ✉️ Dados de SMTP (descomente para usar)
+      #- GOTRUE_SMTP_SENDER_NAME=email@dominio.com # Nome do remetente SMTP
+      #- GOTRUE_SMTP_ADMIN_EMAIL=email@dominio.com # Email administrador SMTP
+      #- GOTRUE_SMTP_USER=email@dominio.com # Usuário SMTP
+      #- GOTRUE_SMTP_PASS=senha # Senha SMTP
+      #- GOTRUE_SMTP_HOST=smtp.dominio.com # Host SMTP
+      #- GOTRUE_SMTP_PORT=587 # Porta SMTP
+
+    ## 📱 Configurações de URL para Emails
+      - GOTRUE_MAILER_URLPATHS_INVITE=/auth/v1/verify
+      - GOTRUE_MAILER_URLPATHS_CONFIRMATION=/auth/v1/verify
+      - GOTRUE_MAILER_URLPATHS_RECOVERY=/auth/v1/verify
+      - GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE=/auth/v1/verify
+
+    ## Configurações de Hooks (descomente para usar)
+      #- GOTRUE_HOOK_SEND_EMAIL_ENABLED=false
+      #- GOTRUE_HOOK_SEND_EMAIL_URI=http://host.docker.internal:54321/functions/v1/email_sender
+      #- GOTRUE_HOOK_SEND_EMAIL_SECRETS=v1,whsec_VGhpcyBpcyBhbiBleGFtcGxlIG9mIGEgc2hvcnRlciBCYXNlNjQgc3RyaW5n
+    
+    ## Configurações de SMS
+      - GOTRUE_EXTERNAL_PHONE_ENABLED=false
+      - GOTRUE_SMS_AUTOCONFIRM=false
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+## --------------------------- ORION --------------------------- ##
+
+  supabase_rest:
+    image: postgrest/postgrest:v13.0.7
+    command:
+      [
+        "postgrest"
+      ]
+    
+    networks:
+      - genezenet ## Nome da rede interna
+
+    environment:
+    ## 🗄️ Configuração do Banco de Dados
+      - PGRST_DB_URI=postgres://authenticator:5071b0ab0ce3ca742f3ee928d44e497a@supabase_db:5432/postgres
+      - PGRST_DB_SCHEMAS=public,storage,graphql_public
+      - PGRST_DB_ANON_ROLE=anon
+
+    ## 🔑 Configurações de JWT (JSON Web Tokens)
+      - PGRST_JWT_SECRET=f4c03e3b2bcd525701e4a78e1795c34cc054dc60
+      - PGRST_APP_SETTINGS_JWT_SECRET=f4c03e3b2bcd525701e4a78e1795c34cc054dc60
+      - PGRST_APP_SETTINGS_JWT_EXP=31536000
+    
+    ## ⚙️ Outras Configurações
+      - PGRST_DB_USE_LEGACY_GUCS=false
+      
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+## --------------------------- ORION --------------------------- ##
+
+  supabase_realtime:
+    image: supabase/realtime:v2.63.0
+
+    networks:
+      - genezenet ## Nome da rede interna
+    dns:
+      - 127.0.0.11
+
+    environment:
+    ## 🔔 Configuração da API Realtime
+      - PORT=4000
+      - API_JWT_SECRET=f4c03e3b2bcd525701e4a78e1795c34cc054dc60
+      - SECRET_KEY_BASE=cedcc91b90fc5745ef77a393cf38d7cabd297e35ce63a6bdedbda5cfa28f414d
+      - APP_NAME=realtime
+
+      - DB_HOST=supabase_db
+      - DB_PORT=5432
+      - DB_USER=supabase_admin
+      - DB_PASSWORD=5071b0ab0ce3ca742f3ee928d44e497a
+      - DB_NAME=postgres
+      - DB_AFTER_CONNECT_QUERY=SET search_path TO _realtime
+      - DB_ENC_KEY=supabaserealtime
+
+    ## 🌐 Configuração de Conexão e Rede
+      - ERL_AFLAGS=-proto_dist inet_tcp
+      - DNS_NODES="''"
+      - RLIMIT_NOFILE=10000
+
+    ## 🌱 Configuração do Ambiente
+      - SEED_SELF_HOST=true
+      - RUN_JANITOR=true
+    
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+## --------------------------- ORION --------------------------- ##
+
+  supabase_storage:
+    image: supabase/storage-api:v1.29.0
+
+    volumes:
+      #- /root/supabase/docker/volumes/storage:/var/lib/storage:z
+      - supabase_storage:/var/lib/storage:z
+    
+    networks:
+      - genezenet ## Nome da rede interna
+
+    environment:
+    ## 🔑 Configuração do PostgREST e JWT
+      - ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.dm-dvIwTl60Y-OZ-5CjpRtDHQWBnqMs76bT6HSEtLEw
+      - SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogInNlcnZpY2Vfcm9sZSIsCiAgImlzcyI6ICJzdXBhYmFzZSIsCiAgImlhdCI6IDE3MTUwNTA4MDAsCiAgImV4cCI6IDE4NzI4MTcyMDAKfQ.rMxky610PthtUrp4Z6FoL9NhaufLv3EdwpIxISRPNn4
+      - POSTGREST_URL=http://supabase_rest:3000
+      - PGRST_JWT_SECRET=f4c03e3b2bcd525701e4a78e1795c34cc054dc60
+      - DATABASE_URL=postgres://supabase_storage_admin:5071b0ab0ce3ca742f3ee928d44e497a@supabase_db:5432/postgres
+
+    ## 🗂️ Configuração de Armazenamento de Arquivos MinIO
+      - REQUEST_ALLOW_X_FORWARDED_PATH=true
+      - FILE_SIZE_LIMIT=52428800
+      - STORAGE_BACKEND=file ## file ou s3
+      - GLOBAL_S3_BUCKET=supabase ## Nome da bucket
+      #- GLOBAL_S3_ENDPOINT=https://s3.dominio.com ## URL S3 do MinIO
+      #- GLOBAL_S3_PROTOCOL=https
+      #- GLOBAL_S3_FORCE_PATH_STYLE=true
+      #- AWS_ACCESS_KEY_ID=ACCESS_KEY ## Access Key
+      #- AWS_SECRET_ACCESS_KEY=SECRET_KEY ## Secret Key
+      #- AWS_DEFAULT_REGION=eu-south ## Região MinIO
+      - FILE_STORAGE_BACKEND_PATH=/var/lib/storage
+
+    ## 🌍 Configuração de Região e Identificação
+      - REGION=eu-south
+      - TENANT_ID=stub
+
+    ## 🖼️ Configuração de Imagens
+      - ENABLE_IMAGE_TRANSFORMATION=true
+      - IMGPROXY_URL=http://supabase_imgproxy:5001
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+## --------------------------- ORION --------------------------- ##
+
+  supabase_imgproxy:
+    image: darthsim/imgproxy:v3.8.0
+
+    volumes:
+      - /root/supabase/docker/volumes/storage:/var/lib/storage:z
+
+    networks:
+      - genezenet ## Nome da rede interna
+
+    environment:
+    ## 📷 Configuração do IMGPROXY
+      - IMGPROXY_BIND=:5001
+      - IMGPROXY_LOCAL_FILESYSTEM_ROOT=/
+      - IMGPROXY_USE_ETAG=true
+      - IMGPROXY_ENABLE_WEBP_DETECTION=true
+    
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+## --------------------------- ORION --------------------------- ##
+
+  supabase_meta:
+    image: supabase/postgres-meta:v0.93.1
+
+    networks:
+      - genezenet ## Nome da rede interna
+
+    environment:
+    ## 🗄️ Configuração do PG_META
+      - PG_META_PORT=8080
+      - PG_META_DB_HOST=supabase_db
+      - PG_META_DB_PORT=5432
+      - PG_META_DB_NAME=postgres
+      - PG_META_DB_USER=supabase_admin
+      - PG_META_DB_PASSWORD=5071b0ab0ce3ca742f3ee928d44e497a
+      - CRYPTO_KEY=f5a0b90c93abbfc4d97ce4803e8f8287ad49655d1d43fccf4e17b33308cb0cd9
+    
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+## --------------------------- ORION --------------------------- ##
+
+  supabase_functions:
+    image: supabase/edge-runtime:v1.69.23
+    command:
+      [
+        "start",
+        "--main-service",
+        "/home/deno/functions/main"
+      ]
+
+    volumes:
+      - /root/supabase/docker/volumes/functions:/home/deno/functions:Z
+    
+    networks:
+      - genezenet ## Nome da rede interna
+
+    environment:
+    ## 🔑 Configuração de JWT e Supabase
+      - VERIFY_JWT=false
+      - JWT_SECRET=f4c03e3b2bcd525701e4a78e1795c34cc054dc60
+    
+    ## 🔗 Configuração de Supabase
+      - SUPABASE_URL=http://supabase_kong:8000
+      - SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogImFub24iLAogICJpc3MiOiAic3VwYWJhc2UiLAogICJpYXQiOiAxNzE1MDUwODAwLAogICJleHAiOiAxODcyODE3MjAwCn0.dm-dvIwTl60Y-OZ-5CjpRtDHQWBnqMs76bT6HSEtLEw
+      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJyb2xlIjogInNlcnZpY2Vfcm9sZSIsCiAgImlzcyI6ICJzdXBhYmFzZSIsCiAgImlhdCI6IDE3MTUwNTA4MDAsCiAgImV4cCI6IDE4NzI4MTcyMDAKfQ.rMxky610PthtUrp4Z6FoL9NhaufLv3EdwpIxISRPNn4
+    
+    ## 🗄️ Configuração de Banco de Dados
+      - SUPABASE_DB_URL=postgresql://postgres:5071b0ab0ce3ca742f3ee928d44e497a@supabase_db:5432/postgres
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+## --------------------------- ORION --------------------------- ##
+
+  supabase_analytics:
+    image: supabase/logflare:1.22.6
+
+    networks:
+      - genezenet ## Nome da rede interna
+    #ports:
+    #  - 4000:4000
+
+    environment:
+    ## 🗄️ Configuração de Banco de Dados
+      - DB_USERNAME=supabase_admin
+      - DB_DATABASE=_supabase
+      - DB_HOSTNAME=supabase_db
+      - DB_PORT=5432
+      - DB_PASSWORD=5071b0ab0ce3ca742f3ee928d44e497a
+      - DB_SCHEMA=_analytics
+      - POSTGRES_BACKEND_URL=postgresql://supabase_admin:5071b0ab0ce3ca742f3ee928d44e497a@supabase_db:5432/_supabase
+      - POSTGRES_BACKEND_SCHEMA=_analytics
+      - LOGFLARE_FEATURE_FLAG_OVERRIDE=multibackend=true
+
+    ## 📊 Configuração do Logflare
+      - LOGFLARE_NODE_HOST=127.0.0.1
+      - LOGFLARE_PUBLIC_ACCESS_TOKEN=165a36a6ba14eaf81108935cd1be3eee
+      - LOGFLARE_PRIVATE_ACCESS_TOKEN=903e36d50ed22f16838269010908b048
+      - LOGFLARE_SINGLE_TENANT=true
+      - LOGFLARE_SUPABASE_MODE=true
+    
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+## --------------------------- ORION --------------------------- ##
+
+  supabase_db:
+    image: supabase/postgres:15.8.1.085
+    command:
+      [
+        "postgres",
+        "-c",
+        "config_file=/etc/postgresql/postgresql.conf",
+        "-c",
+        "log_min_messages=fatal"
+      ]
+
+    volumes:
+      - /root/supabase/docker/volumes/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:Z
+      - /root/supabase/docker/volumes/db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:Z
+      - /root/supabase/docker/volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:Z
+      - /root/supabase/docker/volumes/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:Z
+      - /root/supabase/docker/volumes/db/data:/var/lib/postgresql/data:Z
+      - /root/supabase/docker/volumes/db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:Z
+      - /root/supabase/docker/volumes/db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:Z
+      - /root/supabase/docker/volumes/db/pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql:Z
+      - supabase_db_config:/etc/postgresql-custom
+
+    networks:
+      - genezenet ## Nome da rede interna
+
+    environment:
+    ## 🗄️ Configuração do PostgreSQL
+      - POSTGRES_HOST=/var/run/postgresql
+      - PGPORT=5432
+      - POSTGRES_PORT=5432
+      - PGPASSWORD=5071b0ab0ce3ca742f3ee928d44e497a
+      - POSTGRES_PASSWORD=5071b0ab0ce3ca742f3ee928d44e497a
+      - POSTGRES_DB=postgres
+      - PGDATABASE=postgres
+
+    ## 🔑 Configuração de JWT
+      - JWT_SECRET=f4c03e3b2bcd525701e4a78e1795c34cc054dc60
+      - JWT_EXP=31536000
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+## --------------------------- ORION --------------------------- ##
+
+  supabase_vector:
+    image: timberio/vector:0.28.1-alpine
+    command:
+      [
+        "--config",
+        "/etc/vector/vector.yml"
+      ]
+
+    volumes:
+    - /root/supabase/docker/volumes/logs/vector.yml:/etc/vector/vector.yml:ro,z
+    - /var/run/docker.sock:/var/run/docker.sock:ro,z
+    security_opt:
+      - "label=disable"
+    
+    networks:
+      - genezenet ## Nome da rede interna
+
+    environment:
+    ## 📊 Configuração do Logflare
+      - LOGFLARE_PUBLIC_ACCESS_TOKEN=165a36a6ba14eaf81108935cd1be3eee
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+## --------------------------- ORION --------------------------- ##
+
+  supabase_supavisor:
+    image: supabase/supavisor:2.7.4
+    command:
+      [
+        "/bin/sh",
+        "-c",
+        "/app/bin/migrate && /app/bin/supavisor eval \"$$(cat /etc/pooler/pooler.exs)\" && /app/bin/server"
+      ]
+
+    volumes:
+      - /root/supabase/docker/volumes/pooler/pooler.exs:/etc/pooler/pooler.exs:ro,z
+
+    networks:
+      - genezenet ## Nome da rede interna
+    #ports:
+    #  - 5432:5432
+    #  - 6543:6543
+
+    environment:
+    ## 🗄️ Configuração do Banco de Dados
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=5071b0ab0ce3ca742f3ee928d44e497a
+      - DATABASE_URL=ecto://supabase_admin:5071b0ab0ce3ca742f3ee928d44e497a@supabase_db:5432/_supabase
+      - CLUSTER_POSTGRES=true
+
+    ## 🔐 Configuração de Segurança
+      - SECRET_KEY_BASE=cedcc91b90fc5745ef77a393cf38d7cabd297e35ce63a6bdedbda5cfa28f414d
+      - VAULT_ENC_KEY=cIQ9l2EUrfaaOvPWvxAJjoPoHofBnMJk
+
+    ## 🔑 Configuração de JWT
+      - API_JWT_SECRET=f4c03e3b2bcd525701e4a78e1795c34cc054dc60
+      - METRICS_JWT_SECRET=f4c03e3b2bcd525701e4a78e1795c34cc054dc60
+
+    ## 🌍 Configuração de Regionalização
+      - REGION=local
+
+    ## 🧠 Configuração de Erlang
+      - ERL_AFLAGS=-proto_dist inet_tcp
+
+    ## ⚡ Configuração do Pooler
+      - POOLER_TENANT_ID=1
+      - POOLER_DEFAULT_POOL_SIZE=20
+      - POOLER_MAX_CLIENT_CONN=100
+      - POOLER_POOL_MODE=transaction
+      - DB_POOL_SIZE=5
+
+    ## 🚪 Configuração de Porta
+      - PORT=4000
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+## --------------------------- ORION --------------------------- ##
+
+volumes:
+  supabase_db_config:
+    external: true
+    name: supabase_db_config
+  supabase_storage:
+    external: true
+    name: supabase_storage
+
+networks:
+  genezenet: ## Nome da rede interna
+    external: true
+    name: genezenet ## Nome da rede interna
