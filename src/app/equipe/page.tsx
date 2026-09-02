@@ -26,6 +26,7 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle,
+  DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog";
 import { Loader2, Trash2, UserPlus, EyeOff, CheckCircle2, AlertCircle } from "lucide-react";
