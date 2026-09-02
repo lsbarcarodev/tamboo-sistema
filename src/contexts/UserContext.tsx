@@ -9,6 +9,9 @@ type UserData = {
   role: string; // 'admin', 'motorista', 'equipe'
   ocultar_financeiro: boolean;
   ocultar_relatorios: boolean;
+  ocultar_clientes: boolean;
+  ocultar_equipamentos: boolean;
+  ocultar_mapa: boolean;
 };
 
 type UserContextType = {
@@ -50,6 +53,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           role,
           ocultar_financeiro: !!session.user.user_metadata?.ocultar_financeiro,
           ocultar_relatorios: !!session.user.user_metadata?.ocultar_relatorios,
+          ocultar_clientes: !!session.user.user_metadata?.ocultar_clientes,
+          ocultar_equipamentos: !!session.user.user_metadata?.ocultar_equipamentos,
+          ocultar_mapa: !!session.user.user_metadata?.ocultar_mapa,
         });
       } else {
         setUser(null);

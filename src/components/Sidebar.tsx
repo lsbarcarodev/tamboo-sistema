@@ -49,38 +49,45 @@ export function Sidebar() {
             <ClipboardList className="h-4 w-4" />
             Central de Operação
           </Link>
-          <Link
-            href="/mapa"
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
-              pathname.startsWith("/mapa") ? "bg-[#11211c] text-white" : "text-white/70 hover:bg-[#11211c] hover:text-white"
-            }`}
-          >
-            <Map className="h-4 w-4" />
-            Mapa de Caçambas
-          </Link>
+          {!user?.ocultar_mapa && (
+            <Link
+              href="/mapa"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
+                pathname.startsWith("/mapa") ? "bg-[#11211c] text-white" : "text-white/70 hover:bg-[#11211c] hover:text-white"
+              }`}
+            >
+              <Map className="h-4 w-4" />
+              Mapa de Caçambas
+            </Link>
+          )}
 
           <div className="px-3 mt-6 mb-2 text-xs font-semibold text-white/50 tracking-wider uppercase">
             Cadastros
           </div>
 
-          <Link
-            href="/clientes"
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
-              pathname.startsWith("/clientes") ? "bg-[#11211c] text-white" : "text-white/70 hover:bg-[#11211c] hover:text-white"
-            }`}
-          >
-            <Users className="h-4 w-4" />
-            Clientes
-          </Link>
-          <Link
-            href="/equipamentos"
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
-              pathname.startsWith("/equipamentos") ? "bg-[#11211c] text-white" : "text-white/70 hover:bg-[#11211c] hover:text-white"
-            }`}
-          >
-            <Package className="h-4 w-4" />
-            Equipamentos
-          </Link>
+          {!user?.ocultar_clientes && (
+            <Link
+              href="/clientes"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
+                pathname.startsWith("/clientes") ? "bg-[#11211c] text-white" : "text-white/70 hover:bg-[#11211c] hover:text-white"
+              }`}
+            >
+              <Users className="h-4 w-4" />
+              Clientes
+            </Link>
+          )}
+          
+          {!user?.ocultar_equipamentos && (
+            <Link
+              href="/equipamentos"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
+                pathname.startsWith("/equipamentos") ? "bg-[#11211c] text-white" : "text-white/70 hover:bg-[#11211c] hover:text-white"
+              }`}
+            >
+              <Package className="h-4 w-4" />
+              Equipamentos
+            </Link>
+          )}
 
           <div className="px-3 mt-6 mb-2 text-xs font-semibold text-white/50 tracking-wider uppercase">
             Utilidades
@@ -137,13 +144,6 @@ export function Sidebar() {
       </div>
 
       <div className="border-t border-[#11211c] p-4 flex flex-col gap-2">
-        <Link
-          href="#"
-          className="flex items-center gap-3 rounded-lg px-3 py-2 text-white/70 hover:bg-[#11211c] hover:text-white transition-all text-sm font-medium"
-        >
-          <Settings className="h-4 w-4" />
-          Configurações
-        </Link>
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 rounded-lg px-3 py-2 text-rose-400 hover:bg-[#11211c] hover:text-rose-300 transition-all text-sm font-medium w-full text-left"

@@ -31,15 +31,18 @@ import {
 } from "@/components/ui/dialog";
 import { Loader2, Trash2, UserPlus, EyeOff, CheckCircle2, AlertCircle } from "lucide-react";
 
-type MembroEquipe = {
-  id: string;
-  nome: string;
-  email: string;
-  ocultar_financeiro: boolean;
-  ocultar_relatorios: boolean;
-  ativo: boolean;
-  created_at: string;
-};
+  type MembroEquipe = {
+    id: string;
+    nome: string;
+    email: string;
+    ocultar_financeiro: boolean;
+    ocultar_relatorios: boolean;
+    ocultar_clientes: boolean;
+    ocultar_equipamentos: boolean;
+    ocultar_mapa: boolean;
+    ativo: boolean;
+    created_at: string;
+  };
 
 export default function EquipePage() {
   const { user, loading: userLoading } = useUser();
@@ -56,6 +59,9 @@ export default function EquipePage() {
   const [password, setPassword] = useState('');
   const [ocultarFinanceiro, setOcultarFinanceiro] = useState(false);
   const [ocultarRelatorios, setOcultarRelatorios] = useState(false);
+  const [ocultarClientes, setOcultarClientes] = useState(false);
+  const [ocultarEquipamentos, setOcultarEquipamentos] = useState(false);
+  const [ocultarMapa, setOcultarMapa] = useState(false);
 
   useEffect(() => {
     if (!userLoading && user?.role === 'equipe') {
@@ -96,7 +102,10 @@ export default function EquipePage() {
           email,
           password,
           ocultar_financeiro: ocultarFinanceiro,
-          ocultar_relatorios: ocultarRelatorios
+          ocultar_relatorios: ocultarRelatorios,
+          ocultar_clientes: ocultarClientes,
+          ocultar_equipamentos: ocultarEquipamentos,
+          ocultar_mapa: ocultarMapa
         })
       });
 
@@ -111,6 +120,9 @@ export default function EquipePage() {
       setPassword('');
       setOcultarFinanceiro(false);
       setOcultarRelatorios(false);
+      setOcultarClientes(false);
+      setOcultarEquipamentos(false);
+      setOcultarMapa(false);
       fetchEquipe();
     } catch (error: any) {
       alert(error.message);
@@ -194,15 +206,30 @@ export default function EquipePage() {
                       <div className="flex flex-col gap-1">
                         {membro.ocultar_financeiro && (
                           <span className="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full inline-flex items-center w-fit">
-                            <EyeOff className="h-3 w-3 mr-1" /> Sem Financeiro
+                            <EyeOff className="h-3 w-3 mr-1" /> Financeiro
                           </span>
                         )}
                         {membro.ocultar_relatorios && (
                           <span className="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full inline-flex items-center w-fit">
-                            <EyeOff className="h-3 w-3 mr-1" /> Sem Relatórios
+                            <EyeOff className="h-3 w-3 mr-1" /> Relatórios
                           </span>
                         )}
-                        {!membro.ocultar_financeiro && !membro.ocultar_relatorios && (
+                        {membro.ocultar_clientes && (
+                          <span className="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full inline-flex items-center w-fit">
+                            <EyeOff className="h-3 w-3 mr-1" /> Clientes
+                          </span>
+                        )}
+                        {membro.ocultar_equipamentos && (
+                          <span className="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full inline-flex items-center w-fit">
+                            <EyeOff className="h-3 w-3 mr-1" /> Equipamentos
+                          </span>
+                        )}
+                        {membro.ocultar_mapa && (
+                          <span className="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full inline-flex items-center w-fit">
+                            <EyeOff className="h-3 w-3 mr-1" /> Mapa
+                          </span>
+                        )}
+                        {!membro.ocultar_financeiro && !membro.ocultar_relatorios && !membro.ocultar_clientes && !membro.ocultar_equipamentos && !membro.ocultar_mapa && (
                           <span className="text-xs text-slate-400">Acesso total</span>
                         )}
                       </div>
@@ -294,7 +321,7 @@ export default function EquipePage() {
                     checked={ocultarFinanceiro}
                     onChange={(e) => setOcultarFinanceiro(e.target.checked)}
                   />
-                  Ocultar painel Financeiro
+                  Ocultar Financeiro
                 </Label>
                 
                 <Label className="flex items-center gap-2 font-normal cursor-pointer">
@@ -304,7 +331,37 @@ export default function EquipePage() {
                     checked={ocultarRelatorios}
                     onChange={(e) => setOcultarRelatorios(e.target.checked)}
                   />
-                  Ocultar painel de Relatórios
+                  Ocultar Relatórios
+                </Label>
+                
+                <Label className="flex items-center gap-2 font-normal cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="rounded border-slate-300 text-[#19302a] focus:ring-[#19302a]"
+                    checked={ocultarClientes}
+                    onChange={(e) => setOcultarClientes(e.target.checked)}
+                  />
+                  Ocultar Clientes
+                </Label>
+
+                <Label className="flex items-center gap-2 font-normal cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="rounded border-slate-300 text-[#19302a] focus:ring-[#19302a]"
+                    checked={ocultarEquipamentos}
+                    onChange={(e) => setOcultarEquipamentos(e.target.checked)}
+                  />
+                  Ocultar Equipamentos
+                </Label>
+
+                <Label className="flex items-center gap-2 font-normal cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="rounded border-slate-300 text-[#19302a] focus:ring-[#19302a]"
+                    checked={ocultarMapa}
+                    onChange={(e) => setOcultarMapa(e.target.checked)}
+                  />
+                  Ocultar Mapa de Caçambas
                 </Label>
               </div>
             </div>

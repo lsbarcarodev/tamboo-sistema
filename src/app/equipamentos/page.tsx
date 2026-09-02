@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useUser } from "@/contexts/UserContext";
+import { useRouter } from "next/navigation";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,6 +14,9 @@ import { supabase } from "@/lib/supabase";
 import { EquipamentoFormModal } from "@/components/EquipamentoFormModal";
 
 export default function EquipamentosPage() {
+  const { user, loading: userLoading } = useUser();
+  const router = useRouter();
+
   const [equipamentos, setEquipamentos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState("");
@@ -22,6 +27,12 @@ export default function EquipamentosPage() {
 
   // Delete state
   const [equipToDelete, setEquipToDelete] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (!userLoading && user?.ocultar_equipamentos) {
+      router.replace('/');
+    }
+  }, [user, userLoading, router]);
 
   const carregarEquipamentos = async () => {
     setLoading(true);
