@@ -37,9 +37,8 @@ import { Loader2, Trash2, UserPlus, EyeOff, CheckCircle2, AlertCircle } from "lu
     email: string;
     ocultar_financeiro: boolean;
     ocultar_relatorios: boolean;
-    ocultar_clientes: boolean;
-    ocultar_equipamentos: boolean;
-    ocultar_mapa: boolean;
+    ocultar_equipe: boolean;
+    ocultar_motoristas: boolean;
     ativo: boolean;
     created_at: string;
   };
@@ -59,12 +58,11 @@ export default function EquipePage() {
   const [password, setPassword] = useState('');
   const [ocultarFinanceiro, setOcultarFinanceiro] = useState(false);
   const [ocultarRelatorios, setOcultarRelatorios] = useState(false);
-  const [ocultarClientes, setOcultarClientes] = useState(false);
-  const [ocultarEquipamentos, setOcultarEquipamentos] = useState(false);
-  const [ocultarMapa, setOcultarMapa] = useState(false);
+  const [ocultarEquipe, setOcultarEquipe] = useState(false);
+  const [ocultarMotoristas, setOcultarMotoristas] = useState(false);
 
   useEffect(() => {
-    if (!userLoading && user?.role === 'equipe') {
+    if (!userLoading && user?.ocultar_equipe) {
       router.replace('/');
     }
   }, [user, userLoading, router]);
@@ -103,9 +101,8 @@ export default function EquipePage() {
           password,
           ocultar_financeiro: ocultarFinanceiro,
           ocultar_relatorios: ocultarRelatorios,
-          ocultar_clientes: ocultarClientes,
-          ocultar_equipamentos: ocultarEquipamentos,
-          ocultar_mapa: ocultarMapa
+          ocultar_equipe: ocultarEquipe,
+          ocultar_motoristas: ocultarMotoristas
         })
       });
 
@@ -120,9 +117,8 @@ export default function EquipePage() {
       setPassword('');
       setOcultarFinanceiro(false);
       setOcultarRelatorios(false);
-      setOcultarClientes(false);
-      setOcultarEquipamentos(false);
-      setOcultarMapa(false);
+      setOcultarEquipe(false);
+      setOcultarMotoristas(false);
       fetchEquipe();
     } catch (error: any) {
       alert(error.message);
@@ -149,7 +145,7 @@ export default function EquipePage() {
     }
   };
 
-  if (userLoading || user?.role === 'equipe') {
+  if (userLoading || user?.ocultar_equipe) {
     return (
       <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border shadow-sm h-[calc(100vh-10rem)]">
         <Loader2 className="h-8 w-8 animate-spin text-[#19302a] mb-2" />
@@ -214,22 +210,17 @@ export default function EquipePage() {
                             <EyeOff className="h-3 w-3 mr-1" /> Relatórios
                           </span>
                         )}
-                        {membro.ocultar_clientes && (
+                        {membro.ocultar_equipe && (
                           <span className="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full inline-flex items-center w-fit">
-                            <EyeOff className="h-3 w-3 mr-1" /> Clientes
+                            <EyeOff className="h-3 w-3 mr-1" /> Equipe/Usuários
                           </span>
                         )}
-                        {membro.ocultar_equipamentos && (
+                        {membro.ocultar_motoristas && (
                           <span className="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full inline-flex items-center w-fit">
-                            <EyeOff className="h-3 w-3 mr-1" /> Equipamentos
+                            <EyeOff className="h-3 w-3 mr-1" /> App do Motorista
                           </span>
                         )}
-                        {membro.ocultar_mapa && (
-                          <span className="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full inline-flex items-center w-fit">
-                            <EyeOff className="h-3 w-3 mr-1" /> Mapa
-                          </span>
-                        )}
-                        {!membro.ocultar_financeiro && !membro.ocultar_relatorios && !membro.ocultar_clientes && !membro.ocultar_equipamentos && !membro.ocultar_mapa && (
+                        {!membro.ocultar_financeiro && !membro.ocultar_relatorios && !membro.ocultar_equipe && !membro.ocultar_motoristas && (
                           <span className="text-xs text-slate-400">Acesso total</span>
                         )}
                       </div>
@@ -338,30 +329,20 @@ export default function EquipePage() {
                   <input 
                     type="checkbox" 
                     className="rounded border-slate-300 text-[#19302a] focus:ring-[#19302a]"
-                    checked={ocultarClientes}
-                    onChange={(e) => setOcultarClientes(e.target.checked)}
+                    checked={ocultarEquipe}
+                    onChange={(e) => setOcultarEquipe(e.target.checked)}
                   />
-                  Ocultar Clientes
+                  Ocultar Equipe / Usuários
                 </Label>
 
                 <Label className="flex items-center gap-2 font-normal cursor-pointer">
                   <input 
                     type="checkbox" 
                     className="rounded border-slate-300 text-[#19302a] focus:ring-[#19302a]"
-                    checked={ocultarEquipamentos}
-                    onChange={(e) => setOcultarEquipamentos(e.target.checked)}
+                    checked={ocultarMotoristas}
+                    onChange={(e) => setOcultarMotoristas(e.target.checked)}
                   />
-                  Ocultar Equipamentos
-                </Label>
-
-                <Label className="flex items-center gap-2 font-normal cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    className="rounded border-slate-300 text-[#19302a] focus:ring-[#19302a]"
-                    checked={ocultarMapa}
-                    onChange={(e) => setOcultarMapa(e.target.checked)}
-                  />
-                  Ocultar Mapa de Caçambas
+                  Ocultar App do Motorista
                 </Label>
               </div>
             </div>

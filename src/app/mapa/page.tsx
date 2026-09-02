@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useUser } from "@/contexts/UserContext";
-import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, Package, Truck, Clock, Loader2 } from "lucide-react";
@@ -72,20 +70,11 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lng: numb
 }
 
 export default function MapaPage() {
-  const { user, loading: userLoading } = useUser();
-  const router = useRouter();
-
   const [pedidos, setPedidos] = useState<any[]>([]);
   const [geocodingStatus, setGeocodingStatus] = useState<string>("");
   const [geocodingProgress, setGeocodingProgress] = useState({ done: 0, total: 0 });
   const [failedAddresses, setFailedAddresses] = useState<string[]>([]);
   const [filtroAtivo, setFiltroAtivo] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!userLoading && user?.ocultar_mapa) {
-      router.replace('/');
-    }
-  }, [user, userLoading, router]);
 
   useEffect(() => {
     fetchPedidos();

@@ -24,8 +24,13 @@ import {
   Lock
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useUser } from "@/contexts/UserContext";
+import { useRouter } from "next/navigation";
 
 export default function MotoristasPage() {
+  const { user, loading: userLoading } = useUser();
+  const router = useRouter();
+
   const [loading, setLoading] = useState(true);
   const [motoristas, setMotoristas] = useState<any[]>([]);
   const [openModal, setOpenModal] = useState(false);
@@ -37,6 +42,12 @@ export default function MotoristasPage() {
   
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!userLoading && user?.ocultar_motoristas) {
+      router.replace('/');
+    }
+  }, [user, userLoading, router]);
 
   const fetchMotoristas = async () => {
     setLoading(true);

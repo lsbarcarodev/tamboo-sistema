@@ -29,9 +29,11 @@ export async function GET() {
         nome: u.user_metadata?.nome || 'Usuário sem nome',
         ocultar_financeiro: u.user_metadata?.ocultar_financeiro || false,
         ocultar_relatorios: u.user_metadata?.ocultar_relatorios || false,
-        ocultar_clientes: u.user_metadata?.ocultar_clientes || false,
-        ocultar_equipamentos: u.user_metadata?.ocultar_equipamentos || false,
-        ocultar_mapa: u.user_metadata?.ocultar_mapa || false,
+        ocultar_clientes: false,
+        ocultar_equipamentos: false,
+        ocultar_mapa: false,
+        ocultar_equipe: u.user_metadata?.ocultar_equipe || false,
+        ocultar_motoristas: u.user_metadata?.ocultar_motoristas || false,
         ativo: !u.user_metadata?.inativo,
         created_at: u.created_at,
       }));
@@ -44,7 +46,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { nome, email, password, ocultar_financeiro, ocultar_relatorios, ocultar_clientes, ocultar_equipamentos, ocultar_mapa } = await req.json();
+    const { nome, email, password, ocultar_financeiro, ocultar_relatorios, ocultar_equipe, ocultar_motoristas } = await req.json();
 
     if (!nome || !email || !password) {
       return NextResponse.json({ error: 'Dados incompletos' }, { status: 400 });
@@ -59,9 +61,8 @@ export async function POST(req: Request) {
         nome,
         ocultar_financeiro,
         ocultar_relatorios,
-        ocultar_clientes,
-        ocultar_equipamentos,
-        ocultar_mapa,
+        ocultar_equipe,
+        ocultar_motoristas,
         inativo: false
       }
     });

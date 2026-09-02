@@ -2,26 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useUser } from "@/contexts/UserContext";
-import { useRouter } from "next/navigation";
 import { ClientFormModal } from "@/components/ClientFormModal";
 import { Users, Phone, MapPin, Trash2, Edit, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function ClientesPage() {
-  const { user, loading: userLoading } = useUser();
-  const router = useRouter();
-
   const [clientes, setClientes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [clienteExcluir, setClienteExcluir] = useState<{id: string, nome: string} | null>(null);
-
-  useEffect(() => {
-    if (!userLoading && user?.ocultar_clientes) {
-      router.replace('/');
-    }
-  }, [user, userLoading, router]);
 
   const fetchClientes = async () => {
     try {
