@@ -53,6 +53,7 @@ import { EditOrderModal } from "@/components/EditOrderModal";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useUser } from "@/contexts/UserContext";
 
 type Locacao = {
   id: string;
@@ -78,6 +79,7 @@ type Locacao = {
 };
 
 export default function LocacoesPage() {
+  const { user } = useUser();
   const [pedidos, setPedidos] = useState<Locacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Locacao | null>(null);
@@ -255,7 +257,7 @@ export default function LocacoesPage() {
       try {
         await supabase
           .from('st_locacoes')
-          .update({ updated_at: new Date().toISOString(), updated_by: 'Administrador' })
+          .update({ updated_at: new Date().toISOString(), updated_by: user?.nome || 'Administrador' })
           .eq('id', id);
       } catch (_) {}
 
@@ -320,7 +322,7 @@ export default function LocacoesPage() {
         tipo: 'Colocação',
         data_locacao: `${todayLocal}T12:00:00Z`,
         updated_at: new Date().toISOString(),
-        updated_by: 'Administrador'
+        updated_by: user?.nome || 'Administrador'
       };
 
       if (trocaDataRetirada) {

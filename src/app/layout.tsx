@@ -18,14 +18,17 @@ export const viewport = {
 };
 
 import { ClientLayoutWrapper } from "@/components/ClientLayoutWrapper";
+import { UserProvider } from "@/contexts/UserContext";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
       <body className={`${inter.className} bg-slate-50 text-slate-900`}>
-        <ClientLayoutWrapper>
-          {children}
-        </ClientLayoutWrapper>
+        <UserProvider>
+          <ClientLayoutWrapper>
+            {children}
+          </ClientLayoutWrapper>
+        </UserProvider>
       </body>
     </html>
   );

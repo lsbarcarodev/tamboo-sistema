@@ -21,6 +21,8 @@ import {
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useUser } from "@/contexts/UserContext";
+import { useRouter } from "next/navigation";
 
 // Lista de meses do ano
 const MESES = [
@@ -39,6 +41,9 @@ const MESES = [
 ];
 
 export default function FinanceiroPage() {
+  const { user, loading: userLoading } = useUser();
+  const router = useRouter();
+
   const [loading, setLoading] = useState(true);
   const [locacoes, setLocacoes] = useState<any[]>([]);
   const [filtroStatus, setFiltroStatus] = useState<'geral' | 'pagos' | 'pendentes'>('geral');
@@ -48,6 +53,12 @@ export default function FinanceiroPage() {
   const dataAtual = new Date();
   const [mesSelecionado, setMesSelecionado] = useState<number>(dataAtual.getMonth());
   const [anoSelecionado, setAnoSelecionado] = useState<number>(dataAtual.getFullYear());
+
+  useEffect(() => {
+    if (!userLoading && user?.ocultar_financeiro) {
+      router.replace('/');
+    }
+  }, [user, userLoading, router]);
 
   const fetchData = async () => {
     setLoading(true);

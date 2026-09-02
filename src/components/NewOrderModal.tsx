@@ -9,6 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { format } from "date-fns";
+import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { ClientFormModal } from "./ClientFormModal";
@@ -19,6 +22,7 @@ interface NewOrderModalProps {
 }
 
 export function NewOrderModal({ onSuccess }: NewOrderModalProps) {
+  const { user } = useUser();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [clientesList, setClientesList] = useState<any[]>([]);
@@ -204,7 +208,7 @@ export function NewOrderModal({ onSuccess }: NewOrderModalProps) {
         tipo,
         status: initialStatus,
         endereco_entrega: enderecoTexto,
-        updated_by: 'Administrador',
+        updated_by: user?.nome || 'Administrador',
         mtr: mtr || null,
         forma_pagamento: formaPagamento,
         pago: pago,

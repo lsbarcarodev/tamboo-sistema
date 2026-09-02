@@ -35,10 +35,21 @@ import {
   Pie,
   Cell
 } from "recharts";
+import { useUser } from "@/contexts/UserContext";
+import { useRouter } from "next/navigation";
 
 type Periodo = 'mes_atual' | 'ultimos_30' | 'ultimos_15' | 'esta_semana';
 
 export default function RelatoriosPage() {
+  const { user, loading: userLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!userLoading && user?.ocultar_relatorios) {
+      router.replace('/');
+    }
+  }, [user, userLoading, router]);
+
   const [loading, setLoading] = useState(true);
   const [periodoSelecionado, setPeriodoSelecionado] = useState<Periodo>('mes_atual');
   const [todosPedidos, setTodosPedidos] = useState<any[]>([]);

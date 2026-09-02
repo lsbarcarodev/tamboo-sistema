@@ -11,14 +11,17 @@ import {
   Package,
   Map,
   LogOut,
-  DollarSign
+  DollarSign,
+  UserPlus
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/contexts/UserContext";
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { user } = useUser();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -83,36 +86,53 @@ export function Sidebar() {
             Utilidades
           </div>
 
-          <Link
-            href="/financeiro"
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
-              pathname.startsWith("/financeiro") ? "bg-[#11211c] text-white" : "text-white/70 hover:bg-[#11211c] hover:text-white"
-            }`}
-          >
-            <DollarSign className="h-4 w-4" />
-            Financeiro
-          </Link>
+          {!user?.ocultar_financeiro && (
+            <Link
+              href="/financeiro"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
+                pathname.startsWith("/financeiro") ? "bg-[#11211c] text-white" : "text-white/70 hover:bg-[#11211c] hover:text-white"
+              }`}
+            >
+              <DollarSign className="h-4 w-4" />
+              Financeiro
+            </Link>
+          )}
 
-          <Link
-            href="/relatorios"
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
-              pathname.startsWith("/relatorios") ? "bg-[#11211c] text-white" : "text-white/70 hover:bg-[#11211c] hover:text-white"
-            }`}
-          >
-            <BarChart3 className="h-4 w-4" />
-            Relatórios
-          </Link>
+          {!user?.ocultar_relatorios && (
+            <Link
+              href="/relatorios"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
+                pathname.startsWith("/relatorios") ? "bg-[#11211c] text-white" : "text-white/70 hover:bg-[#11211c] hover:text-white"
+              }`}
+            >
+              <BarChart3 className="h-4 w-4" />
+              Relatórios
+            </Link>
+          )}
 
+          {user?.role !== 'equipe' && (
+            <Link
+              href="/equipe"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
+                pathname.startsWith("/equipe") ? "bg-[#11211c] text-white" : "text-white/70 hover:bg-[#11211c] hover:text-white"
+              }`}
+            >
+              <UserPlus className="h-4 w-4" />
+              Equipe / Usuários
+            </Link>
+          )}
 
-          <Link
-            href="/motoristas"
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
-              pathname.startsWith("/motoristas") ? "bg-[#11211c] text-white" : "text-white/70 hover:bg-[#11211c] hover:text-white"
-            }`}
-          >
-            <Truck className="h-4 w-4" />
-            App do Motorista
-          </Link>
+          {user?.role !== 'equipe' && (
+            <Link
+              href="/motoristas"
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
+                pathname.startsWith("/motoristas") ? "bg-[#11211c] text-white" : "text-white/70 hover:bg-[#11211c] hover:text-white"
+              }`}
+            >
+              <Truck className="h-4 w-4" />
+              App do Motorista
+            </Link>
+          )}
         </nav>
       </div>
 

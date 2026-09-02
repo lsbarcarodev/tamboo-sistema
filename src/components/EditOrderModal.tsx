@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { ClientFormModal } from "./ClientFormModal";
 import { NewAddressModal } from "./NewAddressModal";
+import { useUser } from "@/contexts/UserContext";
 
 interface EditOrderModalProps {
   order: any;
@@ -23,6 +24,7 @@ interface EditOrderModalProps {
 }
 
 export function EditOrderModal({ order, open, setOpen, onSuccess, onDelete }: EditOrderModalProps) {
+  const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const [clientesList, setClientesList] = useState<any[]>([]);
   const [enderecosList, setEnderecosList] = useState<any[]>([]);
@@ -239,7 +241,7 @@ export function EditOrderModal({ order, open, setOpen, onSuccess, onDelete }: Ed
         tipo,
         equipamento,
         endereco_entrega: enderecoTexto,
-        updated_by: 'Administrador',
+        updated_by: user?.nome || 'Administrador',
         mtr: mtr || null,
         forma_pagamento: formaPagamento,
         pago: pago,
