@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import { 
   Card, 
   CardContent, 
@@ -70,7 +71,14 @@ export default function EquipePage() {
   const fetchEquipe = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/equipe');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const res = await fetch('/api/equipe', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         setEquipe(data.equipe || []);
@@ -92,9 +100,15 @@ export default function EquipePage() {
     e.preventDefault();
     setSubmitting(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Sessão não encontrada');
+
       const res = await fetch('/api/equipe', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
         body: JSON.stringify({
           nome,
           email,
@@ -133,8 +147,14 @@ export default function EquipePage() {
     }
     
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Sessão não encontrada');
+
       const res = await fetch(`/api/equipe?id=${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
       });
       
       if (!res.ok) throw new Error('Erro ao inativar usuário');
